@@ -1,7 +1,7 @@
 #include "network.h"
 #include "dynamicstr.h"
 
-void send_file(char *apikey, char *filename, char *buf){
+void send_file(char *apikey, char *filename){
 	struct dynamic_str data;
 	data.str = malloc(1);
 	data.size = 0;

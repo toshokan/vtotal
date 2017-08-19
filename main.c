@@ -25,6 +25,5 @@ int main(int argc, char *argv[]){
 		fprintf(stderr, "Unable to load file: %s\n", argv[1]);
 		return EXIT_FAILURE;
 	}
-	char buf[10240];
-	send_file(apikey, argv[1], buf);
+	send_file(apikey, argv[1]);
 }
