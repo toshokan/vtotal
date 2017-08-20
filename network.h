@@ -7,5 +7,6 @@
 
 char *send_file(char *apikey, char *filename);
 char *parse_response(struct dynamic_str *data, char *filename);
+char *get_results(char *apikey, char *resource);
 
 #endif

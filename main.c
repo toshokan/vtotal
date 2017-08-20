@@ -30,4 +30,7 @@ int main(int argc, char *argv[]){
 		return EXIT_FAILURE;
 	}
 	printf("Your file was successfully uploaded to VirusTotal. Check back later on resource: %s\n",resource_str);
+
+
+	get_results(apikey, resource_str);
 }

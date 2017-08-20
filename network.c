@@ -52,6 +52,42 @@ char *send_file(char *apikey, char *filename){
 	}
 }
 
+char *get_results(char *apikey, char *resource){
+	struct dynamic_str data;
+	data.str = malloc(1);
+	data.size = 0;
+
+	char post_data[146];
+	sprintf(post_data, "apikey=%s&resource=%s", apikey, resource);
+
+	CURLcode res;
+
+	CURL *curl = curl_easy_init();
+	if (!curl){
+		fprintf(stderr, "Failed to initialize networking.\n");
+		//FIXME
+		return NULL;
+	} else {
+		curl_easy_setopt(curl, CURLOPT_URL, "https://www.virustotal.com/vtapi/v2/file/report");
+		curl_easy_setopt(curl, CURLOPT_POSTFIELDS, post_data);
+		curl_easy_setopt(curl, CURLOPT_WRITEFUNCTION, dynamic_str_write);
+		curl_easy_setopt(curl, CURLOPT_WRITEDATA, (void*)&data);
+
+		res = curl_easy_perform(curl);
+
+		if (res != CURLE_OK){
+			fprintf(stderr, "Failed to perform curl operation!: %s\n", curl_easy_strerror(res));
+			return NULL;
+		} else {
+			printf("We rec eived %lu butes. \nHere they are:\n%s\n", (long)data.size, data.str);
+		}
+
+		curl_easy_cleanup(curl);
+		return NULL;
+
+	}
+}
+
 char *parse_response(struct dynamic_str *data, char *filename){
 	char *tag = "\"resource\": \"";
 	char *str_begin = data->str;
