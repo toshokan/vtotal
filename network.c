@@ -1,8 +1,6 @@
 #include "network.h"
 #include "dynamicstr.h"
 
-char *parse_response(struct dynamic_str *data, char *filename);
-
 char *send_file(char *apikey, char *filename){
 	struct dynamic_str data;
 	data.str = malloc(1);
@@ -45,7 +43,7 @@ char *send_file(char *apikey, char *filename){
 		} else {
 			//printf("We received %lu bytes. \n Here they are:\n%s\n", (long)data.size, data.str);
 		}
-		char *resource_str = parse_response(&data, "dogs.txt");
+		char *resource_str = parse_response(&data, "example");
 
 		free(data.str);
 		curl_easy_cleanup(curl);
