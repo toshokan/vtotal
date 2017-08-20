@@ -1,6 +1,8 @@
 #include "network.h"
 #include "dynamicstr.h"
 
+void parse_scan_results(struct scan_list *slist, struct dynamic_str *data);
+
 char *send_file(char *apikey, char *filename){
 	struct dynamic_str data;
 	data.str = malloc(1);
@@ -79,8 +81,12 @@ char *get_results(char *apikey, char *resource){
 			fprintf(stderr, "Failed to perform curl operation!: %s\n", curl_easy_strerror(res));
 			return NULL;
 		} else {
-			printf("We rec eived %lu butes. \nHere they are:\n%s\n", (long)data.size, data.str);
+			printf("We received %lu butes. \nHere they are:\n%s\n", (long)data.size, data.str);
 		}
+
+		struct scan_list slist;
+		slist.size = 0;
+		parse_scan_results(&slist, &data);
 
 		curl_easy_cleanup(curl);
 		return NULL;
@@ -94,4 +100,70 @@ char *parse_response(struct dynamic_str *data, char *filename){
 	int res_begin_pos = strstr(str_begin, tag) + strlen(tag) - str_begin;
 	char *resource = strndup(&str_begin[res_begin_pos], 64);
 }
+
+void parse_scan_results(struct scan_list *slist, struct dynamic_str *data){
+	char *keywords[] = {
+		"\"scans\": {\"",
+		"\"detected\": ",
+		"\"version\": \"",
+		"\"result\": ",
+		"\"update\": \"",
+		"}, \""
+	};
+	char *str_begin = data->str;
+	int pos_fq = strstr(str_begin, keywords[0]) + strlen(keywords[0]) - str_begin;
+	int pos_endq = 0;
+	bool done = false;
+	while(!done){
+		struct scan_list_entry *ent = malloc(sizeof(struct scan_list_entry));
+		pos_endq = strstr(&str_begin[pos_fq], "\"") - str_begin;
+		ent->name = strndup(&str_begin[pos_fq], pos_endq - pos_fq);
+
+		pos_fq = strstr(&str_begin[pos_endq], keywords[1]) + strlen(keywords[1]) - str_begin;
+		if (str_begin[pos_fq] == 'f'){
+			ent->detected = false;
+		} else {
+			ent->detected = true;
+		}
+
+		pos_fq = strstr(&str_begin[pos_endq], keywords[2]) + strlen(keywords[2]) - str_begin;
+		pos_endq = strstr(&str_begin[pos_fq], "\"") - str_begin;
+		ent->version = strndup(&str_begin[pos_fq], pos_endq - pos_fq);
+
+		pos_fq = strstr(&str_begin[pos_endq], keywords[3]) + strlen(keywords[3]) - str_begin;
+		if (str_begin[pos_fq] == 'n'){
+			ent->result = strdup("null");
+		} else {
+			pos_endq = strstr(&str_begin[pos_fq], "\"") - str_begin;
+			ent->result = strndup(&str_begin[pos_fq], pos_endq - pos_fq);
+		}
+
+		pos_fq = strstr(&str_begin[pos_endq], keywords[4]) + strlen(keywords[4]) - str_begin;
+		pos_endq = strstr(&str_begin[pos_fq], "\"") - str_begin;
+		ent->update = strndup(&str_begin[pos_fq], pos_endq - pos_fq);
+
+		slist->entries[slist->size] = ent;
+		slist->size++;
+
+		printf("%s %d %s %s %s\n", ent->name, ent->detected, ent->version, ent->result, ent->update);
+		
+		if(pos_endq + 2 < data->size && str_begin[pos_endq+2] == ','){
+			pos_fq = strstr(&str_begin[pos_endq + 1], "\"") + 1 - str_begin;
+		} else {
+			done = true;
+		}
+	}
+	cleanup_scan_list(slist);
+}
+
+void cleanup_scan_list(struct scan_list *slist){
+	for(int i = 0; i < slist->size; i++){
+		free(slist->entries[i]->name);
+		free(slist->entries[i]->version);
+		free(slist->entries[i]->result);
+		free(slist->entries[i]->update);
+		free(slist->entries[i]);
+	}
+}
+
 
