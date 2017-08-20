@@ -21,7 +21,8 @@ struct scan_list {
 
 char *send_file(char *apikey, char *filename);
 char *parse_response(struct dynamic_str *data, char *filename);
-char *get_results(char *apikey, char *resource);
+struct scan_list *get_results(char *apikey, char *resource);
 void cleanup_scan_list(struct scan_list *slist);
+void print_scan_list(struct scan_list *slist);
 
 #endif

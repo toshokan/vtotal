@@ -32,5 +32,13 @@ int main(int argc, char *argv[]){
 	printf("Your file was successfully uploaded to VirusTotal. Check back later on resource: %s\n",resource_str);
 
 
-	get_results(apikey, resource_str);
+	struct scan_list *slist = get_results(apikey, resource_str);
+	if (!slist){
+		fprintf(stderr, "An error occurred retrieving results\n");
+		return EXIT_FAILURE;
+	}
+	
+	print_scan_list(slist);
+	cleanup_scan_list(slist);
+	free(slist);
 }

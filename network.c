@@ -54,7 +54,7 @@ char *send_file(char *apikey, char *filename){
 	}
 }
 
-char *get_results(char *apikey, char *resource){
+struct scan_list *get_results(char *apikey, char *resource){
 	struct dynamic_str data;
 	data.str = malloc(1);
 	data.size = 0;
@@ -80,13 +80,16 @@ char *get_results(char *apikey, char *resource){
 		if (res != CURLE_OK){
 			fprintf(stderr, "Failed to perform curl operation!: %s\n", curl_easy_strerror(res));
 			return NULL;
-		} else {
-			printf("We received %lu butes. \nHere they are:\n%s\n", (long)data.size, data.str);
-		}
+		} else if ((long)data.size < 1){
+			fprintf(stderr, "The operation succeeded, but we didn't get any data back. You probably made too many queries with your API key.\n");
+			return NULL;
+		} 
 
-		struct scan_list slist;
-		slist.size = 0;
-		parse_scan_results(&slist, &data);
+		struct scan_list *slist = malloc(sizeof(struct scan_list));
+		slist->size = 0;
+		parse_scan_results(slist, &data);
+
+		return slist;
 
 		curl_easy_cleanup(curl);
 		return NULL;
@@ -108,7 +111,6 @@ void parse_scan_results(struct scan_list *slist, struct dynamic_str *data){
 		"\"version\": \"",
 		"\"result\": ",
 		"\"update\": \"",
-		"}, \""
 	};
 	char *str_begin = data->str;
 	int pos_fq = strstr(str_begin, keywords[0]) + strlen(keywords[0]) - str_begin;
@@ -145,7 +147,7 @@ void parse_scan_results(struct scan_list *slist, struct dynamic_str *data){
 		slist->entries[slist->size] = ent;
 		slist->size++;
 
-		printf("%s %d %s %s %s\n", ent->name, ent->detected, ent->version, ent->result, ent->update);
+		//printf("%s %d %s %s %s\n", ent->name, ent->detected, ent->version, ent->result, ent->update);
 		
 		if(pos_endq + 2 < data->size && str_begin[pos_endq+2] == ','){
 			pos_fq = strstr(&str_begin[pos_endq + 1], "\"") + 1 - str_begin;
@@ -153,7 +155,6 @@ void parse_scan_results(struct scan_list *slist, struct dynamic_str *data){
 			done = true;
 		}
 	}
-	cleanup_scan_list(slist);
 }
 
 void cleanup_scan_list(struct scan_list *slist){
@@ -166,4 +167,13 @@ void cleanup_scan_list(struct scan_list *slist){
 	}
 }
 
-
+void print_scan_list(struct scan_list *slist){
+	for(int i = 0; i < slist->size; i++){
+		printf("%s\n\tDetected: %s\n\tVersion: %s\n\tResult: %s\n\tUpdated: %s\n\t\n",
+				slist->entries[i]->name,
+				slist->entries[i]->detected == true ? "true" : "false",
+				slist->entries[i]->version,
+				slist->entries[i]->result,
+				slist->entries[i]->update);
+	}
+}
