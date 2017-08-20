@@ -3,6 +3,6 @@
 
 #include <curl/curl.h>
 
-void send_file(char *apikey, char *filename);
+char *send_file(char *apikey, char *filename);
 
 #endif

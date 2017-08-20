@@ -25,5 +25,9 @@ int main(int argc, char *argv[]){
 		fprintf(stderr, "Unable to load file: %s\n", argv[1]);
 		return EXIT_FAILURE;
 	}
-	send_file(apikey, argv[1]);
+	char *resource_str = send_file(apikey, argv[1]);
+	if (resource_str == NULL){
+		return EXIT_FAILURE;
+	}
+	printf("Your file was successfully uploaded to VirusTotal. Check back later on resource: %s\n",resource_str);
 }

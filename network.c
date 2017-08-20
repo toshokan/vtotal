@@ -1,7 +1,9 @@
 #include "network.h"
 #include "dynamicstr.h"
 
-void send_file(char *apikey, char *filename){
+char *parse_response(struct dynamic_str *data, char *filename);
+
+char *send_file(char *apikey, char *filename){
 	struct dynamic_str data;
 	data.str = malloc(1);
 	data.size = 0;
@@ -16,7 +18,7 @@ void send_file(char *apikey, char *filename){
 		// FIXME
 		// exit
 		//return EXIT_FAILURE;
-		return;
+		return NULL;
 	} else {
 		curl_formadd(&formpost,
 					 &lastptr,
@@ -39,11 +41,23 @@ void send_file(char *apikey, char *filename){
 
 		if(res != CURLE_OK){
 			fprintf(stderr, "failed to perform curl operation!: %s\n", curl_easy_strerror(res));
+			return NULL;
 		} else {
-			printf("We received %lu bytes. \n Here they are:\n%s\n", (long)data.size, data.str);
+			//printf("We received %lu bytes. \n Here they are:\n%s\n", (long)data.size, data.str);
 		}
+		char *resource_str = parse_response(&data, "dogs.txt");
 
+		free(data.str);
 		curl_easy_cleanup(curl);
 		curl_formfree(formpost);
+		return resource_str;
 	}
 }
+
+char *parse_response(struct dynamic_str *data, char *filename){
+	char *tag = "\"resource\": \"";
+	char *str_begin = data->str;
+	int res_begin_pos = strstr(str_begin, tag) + strlen(tag) - str_begin;
+	char *resource = strndup(&str_begin[res_begin_pos], 64);
+}
+
