@@ -8,6 +8,7 @@
 bool write_resource_to_file(char *filename, char *resource);
 int scan_mode(char *apikey, char *filename);
 int result_mode(char *apikey, char *filename);
+int list_pending();
 
 int main(int argc, char *argv[]){
 	char apikey[65];
@@ -44,6 +45,9 @@ int main(int argc, char *argv[]){
 					return scan_mode(apikey, argv[2]);
 					break;
 				case 'r':
+					if(strcmp(argv[2],"list")==0){
+						list_pending();
+					}
 					printf("result mode, asked to check %s\n",argv[2]);
 					return result_mode(apikey, argv[2]);
 					break;
@@ -158,5 +162,30 @@ int result_mode(char *apikey, char *filename){
 	print_scan_list(slist);
 	cleanup_scan_list(slist);
 	free(slist);
+}
+
+int list_pending(){
+	DIR *d = opendir("vpending");
+	struct dirent *dent;
+	if(!d){
+		fprintf(stderr, "Unable to open the \"vpending\" directory.");
+		return EXIT_FAILURE;
+	}
+	while(dent = readdir(d)){
+		if(dent->d_type == DT_REG){
+			char path[256];
+			sprintf(path,"vpending/%s",dent->d_name);
+			char contents[1024]; 
+			FILE *fd = fopen(path,"r");
+			// FIXME
+			// Check ptr
+			fgets(contents,1024,fd);
+			printf("%s\n\t%s\n",dent->d_name,contents);
+			contents[0] = '\0';
+			fclose(fd);
+		}
+	}
+	closedir(d);
+	return EXIT_SUCCESS;
 }
 
