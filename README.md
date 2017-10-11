@@ -4,4 +4,6 @@ A small text-based/command-line utility to send files to VirusTotal, manage resp
 ## Dependencies
 This program is written in C and depends on libcurl for networking.
 
-Work in progress.
+## Usage
+Use `vtotal scan [filename]` to scan a file and add its id to the list to check.
+Use `vtotal results list` to list previously scanned files and view results.
