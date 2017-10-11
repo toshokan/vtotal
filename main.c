@@ -28,12 +28,11 @@ int main(int argc, char *argv[]){
 			break;
 		case 2:
 			switch (argv[1][0]){
+				// Scan mode
 				case 's':
 					printf("scan mode\n");
 					break;
-				case 'l':
-					printf("list mode\n");
-					break;
+				// Result mode
 				case 'r':
 					printf("result mode\n");
 					break;
@@ -41,9 +40,11 @@ int main(int argc, char *argv[]){
 			break;
 		case 3:
 			switch (argv[1][0]){
+				// Scan mode with file
 				case 's':
 					return scan_mode(apikey, argv[2]);
 					break;
+				// Results list
 				case 'r':
 					if(strcmp(argv[2],"list")==0){
 						char *fname = list_pending();
@@ -55,57 +56,6 @@ int main(int argc, char *argv[]){
 			}
 			break;
 	}
-
-	//if (argc == 1){
-	//} else 
-	//if (argc > 2){
-	//	DIR *d = opendir("vpending");
-	//	struct dirent *dent;
-	//	if(!d){
-	//		fprintf(stderr, "Unable to open the \"vpending\" directory.");
-	//		return EXIT_FAILURE;
-	//	}
-	//	while(dent = readdir(d)){
-	//		if(dent->d_type == DT_REG){
-	//			char path[256];
-	//			sprintf(path,"vpending/%s",dent->d_name);
-	//			char contents[1024]; 
-	//			FILE *fd = fopen(path,"r");
-	//			// FIXME
-	//			// Check ptr
-	//			fgets(contents,1024,fd);
-	//			printf("%s\n\t%s\n",dent->d_name,contents);
-	//			contents[0] = '\0';
-	//			fclose(fd);
-	//		}
-	//	}
-	//	closedir(d);
-	//	return EXIT_SUCCESS;
-	//}
-
-	//fclose(fd);
-	//fd = fopen(argv[1],"r");
-	//if (fd == NULL){
-	//	fprintf(stderr, "Unable to load file: %s\n", argv[1]);
-	//	return EXIT_FAILURE;
-	//}
-	//char *resource_str = send_file(apikey, argv[1]);
-	//if (resource_str == NULL){
-	//	return EXIT_FAILURE;
-	//}
-	//fclose(fd);
-	//printf("Your file was successfully uploaded to VirusTotal. Check back later on resource: %s\n",resource_str);
-
-
-	//struct scan_list *slist = get_results(apikey, resource_str);
-	//if (!slist){
-	//	fprintf(stderr, "An error occurred retrieving results\n");
-	//	return EXIT_FAILURE;
-	//}
-	//
-	//print_scan_list(slist);
-	//cleanup_scan_list(slist);
-	//free(slist);
 }
 
 int scan_mode(char *apikey, char *filename){
@@ -148,12 +98,10 @@ int result_mode(char *apikey, char *filename){
 	}
 	char resource_str[65];
 	int next_line = 0;
-	printf("%s\n", "test");
 	while(next_line != 2){
 		fscanf(fd,"%s", resource_str);
 		next_line++;
 	}
-	printf("%s\n",resource_str);
 	struct scan_list *slist = get_results(apikey, resource_str);
 	if (!slist){
 		fprintf(stderr, "An error occurred retrieving results\n");
@@ -194,7 +142,7 @@ char *list_pending(){
 		}
 	}
 	int selection = -1;
-	while(selection < 0 || selection > current_file){
+	while(selection < 0 || selection > current_file - 1){
 		printf("Choose a file to check on by entering its bracketed number: ");
 		scanf("%d", &selection);
 	}

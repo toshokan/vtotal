@@ -89,11 +89,8 @@ struct scan_list *get_results(char *apikey, char *resource){
 		slist->size = 0;
 		parse_scan_results(slist, &data);
 
-		return slist;
-
 		curl_easy_cleanup(curl);
-		return NULL;
-
+		return slist;
 	}
 }
 
@@ -101,10 +98,12 @@ char *parse_response(struct dynamic_str *data, char *filename){
 	char *tag = "\"resource\": \"";
 	char *str_begin = data->str;
 	int res_begin_pos = strstr(str_begin, tag) + strlen(tag) - str_begin;
-	char *resource = strndup(&str_begin[res_begin_pos], 64);
+	return strndup(&str_begin[res_begin_pos], 64);
 }
 
 void parse_scan_results(struct scan_list *slist, struct dynamic_str *data){
+	// get response code
+	char *rc = "\"response_code\": ";
 	char *keywords[] = {
 		"\"scans\": {\"",
 		"\"detected\": ",
@@ -113,8 +112,21 @@ void parse_scan_results(struct scan_list *slist, struct dynamic_str *data){
 		"\"update\": \"",
 	};
 	char *str_begin = data->str;
-	int pos_fq = strstr(str_begin, keywords[0]) + strlen(keywords[0]) - str_begin;
-	int pos_endq = 0;
+	int pos_fq = strstr(str_begin, rc) + strlen(rc) - str_begin;
+	int pos_endq = strstr(&str_begin[pos_fq], ",") - str_begin;
+	switch(str_begin[pos_fq]){
+	case '0':
+	  fprintf(stderr,"VirusTotal doesn't seem to have a record of that file.\n");
+	  return;
+	  break;
+	case '-':
+	  fprintf(stderr,"That file hasn't been scanned yet. Try again later.\n");
+	  return;
+	  break;
+	}
+
+	pos_fq = strstr(str_begin, keywords[0]) + strlen(keywords[0]) - str_begin;
+	pos_endq = 0;
 	bool done = false;
 	while(!done){
 		struct scan_list_entry *ent = malloc(sizeof(struct scan_list_entry));
@@ -147,8 +159,6 @@ void parse_scan_results(struct scan_list *slist, struct dynamic_str *data){
 		slist->entries[slist->size] = ent;
 		slist->size++;
 
-		//printf("%s %d %s %s %s\n", ent->name, ent->detected, ent->version, ent->result, ent->update);
-		
 		if(pos_endq + 2 < data->size && str_begin[pos_endq+2] == ','){
 			pos_fq = strstr(&str_begin[pos_endq + 1], "\"") + 1 - str_begin;
 		} else {

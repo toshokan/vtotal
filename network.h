@@ -1,5 +1,5 @@
 #ifndef VTOTAL_NETWORK_H
-#define NETWORK_H
+#define VTOTAL_NETWORK_H
 
 #include <curl/curl.h>
 #include <stdbool.h>
